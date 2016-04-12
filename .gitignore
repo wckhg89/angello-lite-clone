@@ -1,0 +1,7 @@
+.DS_STORE
+#intelliJ
+.idea
+*.iml
+#bower
+bower.json
+bower_components
