@@ -3,7 +3,23 @@
  */
 var myModule = angular.module('Angello', []);
 
-myModule.service('AngelloMode', function () {
+myModule.factory('AngelloHelper', function () {
+    var buildIndex = function (source, property) {
+        var tempArray = [];
+
+        $.each(source, function (idx, value) {
+            tempArray[value[property]] = value;
+        });
+
+        return tempArray;
+    };
+
+    return {
+        buildIndex: buildIndex
+    };
+});
+
+myModule.service('AngelloModel', function () {
     var service = this,
         statuses = [
             {name: 'Back Log'},
@@ -73,13 +89,51 @@ myModule.service('AngelloMode', function () {
 
 });
 
-myModule.controller('MainCtrl', function () {
+myModule.controller('MainCtrl', function (AngelloModel, AngelloHelper) {
     var main = this;
 
-    main.types;
-    main.statuses;
-    main.stories;
-    main.typesIndex;
-    main.statusesIndex;
+    main.types = AngelloModel.getTypes();
+    main.statuses = AngelloModel.getStatuses();
+    main.stories = AngelloModel.getStories();
+    main.typesIndex = AngelloHelper.buildIndex(main.types, 'name');
+    main.statusesIndex = AngelloHelper.buildIndex(main.statuses, 'name');
 
+    main.setCurrentStory = function (story) {
+        main.currentStory = story;
+        main.currentStatus = main.statusesIndex[story.status];
+        main.currentType = main.typesIndex[story.type];
+    };
+
+    main.createStory = function() {
+        main.stories.push({
+                              title: 'New Story',
+                              description: 'Description pending.',
+                              criteria: 'Criteria pending.',
+                              status: 'Back Log',
+                              type: 'Feature',
+                              reporter: 'Pending',
+                              assignee: 'Pending'
+                          });
+    };
+
+    main.setCurrentStatus = function (status) {
+        if (typeof main.currentStory !== 'undefined') {
+            main.currentStory.status = status.name;
+        }
+    };
+
+    main.setCurrentType = function (type) {
+        if (typeof main.currentStory !== 'undefined') {
+            main.currentStory.type = type.name;
+        }
+    };
 });
+
+myModule.directive('story', function () {
+    return {
+        scope: true,
+        replace: true,
+        template: '<div><h4>{{story.title}}<p>{{story.description}}</p>'
+                  + '<p>{{story.type}}</p></h4></div>'
+    }
+})
